@@ -1,7 +1,7 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const { createClient } = require("@supabase/supabase-js");
-const crypto = require("crypto");
+import express from "express";
+import bodyParser from "body-parser";
+import crypto from "crypto";
+import { createClient } from "@supabase/supabase-js";
 
 const app = express();
 app.use(bodyParser.json());
