@@ -41,10 +41,10 @@ app.post("/fillout-webhook", async (req, res) => {
   try {
     const data = req.body;
 
-    // 🧾 Extract fields from submission (adjust to your actual field names)
-    const email = data.email || "";
-    const jobTitle = data.job_title || "";
-    const responsibilities = data.responsibilities || "";
+    // 🧾 Extract values using **exact Fillout field keys**
+    const email = data["Email"] || "";
+    const jobTitle = data["Job Title"] || "";
+    const responsibilities = data["Responsibilities"] || "";
 
     console.log("📩 Incoming submission:", { email, jobTitle });
 
@@ -63,15 +63,17 @@ app.post("/fillout-webhook", async (req, res) => {
     }
 
     // 💾 Insert into public profile table
-    const { error: pubError } = await supabase.from("candidate_profiles_public").insert({
-      job_title: jobTitle,
-      experience_years: 5, // 🟡 Replace with real values later
-      skills: ["Python", "AWS", "PostgreSQL"], // 🟡 Placeholder
-      region: "Remote", // 🟡 Placeholder
-      education_level: "Bachelor", // 🟡 Placeholder
-      salary_band: "90k–110k", // 🟡 Placeholder
-      embedding: embeddingVector,
-    });
+    const { error: pubError } = await supabase
+      .from("candidate_profiles_public")
+      .insert({
+        job_title: jobTitle,
+        experience_years: 5, // Example static value
+        skills: ["Python", "AWS", "PostgreSQL"], // Example static value
+        region: "Remote",
+        education_level: "Bachelor",
+        salary_band: "90k–110k",
+        embedding: embeddingVector,
+      });
 
     if (pubError) {
       console.error("❌ Public insert error:", pubError.message);
@@ -79,13 +81,15 @@ app.post("/fillout-webhook", async (req, res) => {
     }
 
     // 💾 Insert encrypted fields into secure table
-    const { error: encError } = await supabase.from("candidate_profiles_encrypted").insert({
-      email_ciphertext: encryptedEmail.ciphertext,
-      responsibilities_ciphertext: encryptedResponsibilities.ciphertext,
-      aspirations_ciphertext: "", // Optional: add later
-      iv: encryptedEmail.iv,
-      tag: encryptedEmail.tag,
-    });
+    const { error: encError } = await supabase
+      .from("candidate_profiles_encrypted")
+      .insert({
+        email_ciphertext: encryptedEmail.ciphertext,
+        responsibilities_ciphertext: encryptedResponsibilities.ciphertext,
+        aspirations_ciphertext: "", // Optional
+        iv: encryptedEmail.iv,
+        tag: encryptedEmail.tag,
+      });
 
     if (encError) {
       console.error("❌ Encrypted insert error:", encError.message);
