@@ -19,7 +19,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// Encryption setup
+// AES-GCM encryption setup
 const algorithm = "aes-256-gcm";
 const encryptionKey = Buffer.from(process.env.ENCRYPTION_KEY, "hex");
 
@@ -36,12 +36,12 @@ function encrypt(text) {
   };
 }
 
-// Webhook route
+// Webhook route for Fillout
 app.post("/fillout-webhook", async (req, res) => {
   try {
     const data = req.body;
 
-    // 🔍 Extract fields (adjust to match Fillout form names)
+    // 🧾 Extract fields from submission (adjust to your actual field names)
     const email = data.email || "";
     const jobTitle = data.job_title || "";
     const responsibilities = data.responsibilities || "";
@@ -62,29 +62,31 @@ app.post("/fillout-webhook", async (req, res) => {
       embeddingVector = embeddingResponse.data[0].embedding;
     }
 
-    // 💾 Insert public data into Supabase
+    // 💾 Insert into public profile table
     const { error: pubError } = await supabase.from("candidate_profiles_public").insert({
       job_title: jobTitle,
-      experience_years: 5, // Replace with real value from form later
-      skills: ["Python", "AWS", "PostgreSQL"], // Replace with real value
-      region: "Remote", // Replace with real value
-      education_level: "Bachelor", // Replace with real value
-      salary_band: "90k–110k", // Replace with real value
+      experience_years: 5, // 🟡 Replace with real values later
+      skills: ["Python", "AWS", "PostgreSQL"], // 🟡 Placeholder
+      region: "Remote", // 🟡 Placeholder
+      education_level: "Bachelor", // 🟡 Placeholder
+      salary_band: "90k–110k", // 🟡 Placeholder
       embedding: embeddingVector,
     });
+
     if (pubError) {
       console.error("❌ Public insert error:", pubError.message);
       throw pubError;
     }
 
-    // 💾 Insert encrypted fields into second table
+    // 💾 Insert encrypted fields into secure table
     const { error: encError } = await supabase.from("candidate_profiles_encrypted").insert({
       email_ciphertext: encryptedEmail.ciphertext,
       responsibilities_ciphertext: encryptedResponsibilities.ciphertext,
-      aspirations_ciphertext: "", // Placeholder
+      aspirations_ciphertext: "", // Optional: add later
       iv: encryptedEmail.iv,
       tag: encryptedEmail.tag,
     });
+
     if (encError) {
       console.error("❌ Encrypted insert error:", encError.message);
       throw encError;
